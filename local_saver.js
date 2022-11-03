@@ -139,6 +139,7 @@ function flagElem(root) {
                 if (input) {
                     _lsv_inputs.push(input);
                     input.setAttribute("data-auto-saver-id", findInput_id(root));
+                    input.setAttribute("data-belongsId", getTxt(root));
                 }
                 console.log("[LSV]:FIND-" + getTxt(root))
                 continue;
@@ -162,16 +163,22 @@ function _lsv_getInputList() {
 }
 
 function _lsv_input_setVal(elem, val) {
+    let changed = false;
     if (elem.nodeName == 'TEXTAREA') {
+        changed = (elem.value != val)
         elem.value = val;
     } else if (elem.nodeName == 'INPUT') {
         if (elem.type == 'radio' || elem.type == 'checkbox') {
+            changed = (elem.checked != (val == "1" ? true : false));
             elem.checked = val == "1" ? true : false;
         } else {
+            changed = (elem.value != val)
             elem.value = val;
         }
     }
-    elem.dispatchEvent(new InputEvent('change', { autoInnerEvent: true }));
+
+    if (changed)
+        elem.dispatchEvent(new InputEvent('change', { autoInnerEvent: true }));
     elem.dispatchEvent(new InputEvent('input', { autoInnerEvent: true }));
 }
 function _lsv_input_getVal(elem) {
@@ -199,7 +206,7 @@ window.addEventListener("load", function () {
     _lsv_loadCheck();
 });
 function deleteAll() {
-    if(!confirm("Sure to delete all saved data?"))return;
+    if (!confirm("Sure to delete all saved data?")) return;
     Object.keys(stored).forEach(function (selector) {
         localStorage.removeItem("local_saver_" + selector);
     });
@@ -223,7 +230,7 @@ function _lsv_loadEvent() {
     _lsv_getInputList().forEach(function (input) {
         var tmpVal = _lsv_get(input.getAttribute("data-auto-saver-id"));
         if (tmpVal !== null) {
-            console.log("VAL " + tmpVal + " Applies");
+            console.log("VAL " + tmpVal + " Applies to INPUT " + input.getAttribute("data-belongsId"));
             _lsv_input_setVal(input, tmpVal);
         }
         input.addEventListener("change", _lsv_event_changed);
